@@ -5,12 +5,23 @@ from Scientific.IO.NetCDF import *
 from yt.utilities.physical_constants import cm_per_kpc
 import h5py
 
-file = NetCDFFile('sod-mpi1007.nc','r')
+file = NetCDFFile('sod-mpi1032.nc','r')
 data = {}
-for k in file.variables.keys():
+dkeys = file.variables.keys()
+for k in dkeys:
 	data[k] = file.variables[k].getValue()
 
-bbox = array([[0.0,1.0],[0.0,1.0],[0.0,1.0]])
-pf = load_uniform_grid(data,data["Density"].shape,100.*cm_per_kpc,bbox=bbox,nprocs=1,periodicity=(False,False,False))
-slc = SlicePlot(pf,"x",["Density"])
-slc.save()
+# To plot 2D or 1D data, set the size of the unused dims to 1 in dshape
+# Otherwise, treat it like 3D data
+
+bbox = array([[0.0,1.0],[0.0,1.0],[0.0,0.0]])
+dshape2d = data['Density'].shape
+dshape = (dshape2d[0],dshape2d[1],1) # 2D geometry
+scalemultiplier = 1.0
+
+pf = load_uniform_grid(data,dshape,scalemultiplier,bbox=bbox,nprocs=1,periodicity=(False,False,False))
+
+for k in dkeys:
+	slc = SlicePlot(pf,"z",[k])
+	slc.save()
+

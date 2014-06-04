@@ -47,11 +47,11 @@ CHARACTER(len=50):: hstfile
 CHARACTER(len=50):: filename
 
 INTEGER :: ncycend, nprin, nmovie, ndump, imax, n
-REAL :: endtime, tprin, tmovie, dxfac, xmin, xmax, ridt, xvel, dt3, dtx
+REAL :: endtime, tprin, tmovie, dxfac, xmin, xmax, ridt, xvel, dt3, dtx, au, soundsp
 
-! ADDITIONAL VARIABLES NEEDED FOR CURRENT SIMULATION (Sedov Explosion)
+! ADDITIONAL VARIABLES NEEDED FOR CURRENT SIMULATION (Sod Shock)
 INTEGER :: nmid
-REAL :: pright, pleft, dright, dleft, Eblast, Pblast, Rblast, pie
+REAL :: pright, pleft, dright, dleft
 
 NAMELIST / hinput / rstrt, prefix, ncycend, ndump, nprin, nmovie, endtime, tprin, tmovie
 
@@ -64,30 +64,52 @@ close(15)
 
 ! Name and open a file for recording the simulation metadata
 
-hstfile  = 'output/' // trim(prefix) // '.hst'
+hstfile  = trim(prefix) // '.hst'
 open (unit=8,file=hstfile,form='formatted')
 call date_and_time(todayis)
 write (8,*) 'History File for VH-1 simulation run on ', todayis(5:6), ' / ', todayis(7:8), ' / ', todayis(1:4)
 write (8,*) 
 
 !============================================================
+
+!RT = 1.e04
+
+gam =  4./3.
+gamm   = gam - 1.0 
+
+dright = 1.67e-08
+pright = dright*RT
+
+dleft  = dright 
+pleft = pright
+
+!uinflo = 100. this is sound speed when know its supersonic
+soundsp = sqrt(RT)
+uinflo = 4.5*soundsp
+pinflo = pleft
+dinflo = dleft
+vinflo = 0.
+winflo = 0.
+einflo = RT/gamm + (0.5*(uinflo**2))
+
 ! CREATE GRID
 
 ! Set some flags for geometry and boundary conditions
 
 sweep  = 'x'   ! default is x-sweep (only option for 1D)
-ngeom  = 2     ! Cartesian geometry for ngeom=0 or 1 or something like that.
-               ! ngeom=2 for spherical radial coordinates
-nleft  = 0     ! Reflecting at xmin
-nright = 2     ! Reflecting at xmax
+ngeom  = 2     ! Cartesian geometry
+nleft  = 2     ! Reflecting at xmin
+nright = 1     ! Reflecting at xmax
 
 ! Create a grid of imax zones, making room for 6 'ghost zones' on each end
 
-imax = 500           ! total number of real zones on grid
+imax = 1000          ! total number of real zones on grid
 nmin = 7             ! first real zone
 nmax = imax + 6      ! last real zone
-xmin = 0.1           ! x value at left edge of grid
-xmax = 10.0           ! x value at right edge of grid
+!xmin = 7.e05          ! x value at left edge of grid
+au = 150.e06
+xmin = 0.5*au
+xmax = 100.*au          ! x value at right edge of grid
 
 ! Initialize grid coordinates: xa0(n) is coordinate of left edge of zone n
 
@@ -100,29 +122,20 @@ enddo
 !============================================================
 ! INITIAL CONDITIONS
 
-! Set up parameters for the problem; in this case a Bondi Accretion
+! Set up parameters for the problem
 
-dotflo = 1.0
-potflo = 0.1
-uotflo = 0.0
-votflo = 0.0
-wotflo = 0.0
+!gam    = 1.333334   ! We always need a ratio of specific heats, gamma
+!gam =  4./3.
+!gamm   = gam - 1.0 
 
-pright = 0.1 
-dright = 1.0 
-pleft  = 0.1 
-dleft  = 1.0 
-gam    = 1.333   ! We always need a ratio of specific heats, gamma
+! initialize grid
 
-gamm   = gam - 1.0 
-
-! initialize grid for Bondi Accretion problem:
-
-nmid = imax/2+6
-do n = nmin, nmid      ! left half of grid has density, pressure given by dleft, pleft
+nmid = nmin
+do n = nmin,nmid      ! left half of grid has density, pressure given by dleft, pleft
  r(n) = dleft
  p(n) = pleft
- u(n) = 0.0            ! velocity is zero everywhere
+ u(n) = 4.5*soundsp            ! velocity is zero everywhere
+ u(n) = 0.0
  v(n) = 0.0            ! note that we have to carry around the transverse
  w(n) = 0.0            ! velocities even though this is a 1D code
  f(n) = 0.0            ! set initial flattening to zero
@@ -131,7 +144,7 @@ enddo
 do n = nmid+1, nmax    ! right half of grid has density, pressure given by dright, pright
  r(n) = dright
  p(n) = pright
- u(n) = 0.0            ! velocity is zero everywhere
+ u(n) = 4.5*soundsp  ! velocity is zero everywhere
  v(n) = 0.0            ! note that we have to carry around the transverse
  w(n) = 0.0            ! velocities even though this is a 1D code
  f(n) = 0.0            ! set initial flattening to zero
@@ -140,7 +153,7 @@ enddo
 ! Write out initial data to a file
 nfile = 0
 write(tmp1,"(i4)") nfile + 1000 ; nfile = nfile + 1
-filename = 'output/' // trim(prefix) // tmp1 // '.dat'
+filename = trim(prefix) // tmp1 // '.dat'
 open(unit=3,file=filename,form='formatted')
 do n = nmin, nmax
   write(3, 1003) xa0(n), r(n), p(n), u(n)
@@ -149,12 +162,12 @@ close(3)
 
 ! Log parameters of problem in history file
 
-write (8,*) 'Bondi Accretion problem in 2 dimensions'
+write (8,*) 'Sedov in 1 dimension'
 write (8,"('Grid dimensions: ',i4)") imax
 write (8,*) 
-write (8,"('Ratio of specific heats = ',f8.5)") gam
-write (8,"('Background Pressure = ',f8.5)") pright
-write (8,"('Background Density  = ',f8.5)")  dright
+write (8,"('Ratio of specific heats = ',f5.3)") gam
+write (8,"('Pressure Ratio = ',f5.3)") pright/pleft
+write (8,"('Density Ratio = ',f5.3)")  dright/dleft
 write (8,*) 
 
 ! Compute initial time step based on Courant condition to ensure stability
@@ -189,9 +202,20 @@ do while (ncycle < ncycend)
   !    The Lagrangian coordinates, xa(n), will move with the flow each time step
   do n = nmin, nmax
     e (n) = p(n)/(r(n)*gamm) + 0.5*(u(n)**2+v(n)**2+w(n)**2)
+    !e (n) = RT/gamm + 0.5*(u(n)**2+v(n)**2+w(n)**2)
     xa(n) = xa0(n)
     dx(n) = dx0(n)
   enddo
+
+  if (ncycle == 5000) then
+    r(nmax) = 10*dright
+    p(nmax) = 10*pright
+    u(nmax) = -20.0*soundsp  ! velocity is zero everywhere
+    v(nmax) = 0.0            ! note that we have to carry around the transverse
+    w(nmax) = 0.0            ! velocities even though this is a 1D code
+    f(nmax) = 0.0
+  endif
+
   
   ! perform 1D hydro update with PPMLR algorithm
   call ppmlr
@@ -221,8 +245,8 @@ do while (ncycle < ncycend)
   if ( ncycp >= nprin .or. timep >= tprin ) then    ! Print out a data file
 
     write(tmp1,"(i4)") nfile + 1000 ; nfile = nfile + 1
-    filename = 'output/' // trim(prefix) // tmp1 // '.dat'
-    write(8,6001) trim(prefix) // tmp1, time, ncycle
+    filename = trim(prefix) // tmp1 // '.dat'
+    write(8,6001) filename, time, ncycle
 
     open(unit=3,file=filename,form='formatted')
      do n = nmin, nmax

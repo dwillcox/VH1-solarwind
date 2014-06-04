@@ -19,8 +19,7 @@ scale = 100.*cm_per_kpc
 
 for k in range(startNum,endNum+1,1):
 	fileName = filePrefix + str(k) + fileSuffix
-	outputName = ('Slice_' + field + '_' + dim + 
-			'_' + filePrefix + '_' + str(k))
+	outputName = filePrefix + '_' + str(k)
 	file = NetCDFFile(fileName,'r')
 	data = {}
 	for k in file.variables.keys():

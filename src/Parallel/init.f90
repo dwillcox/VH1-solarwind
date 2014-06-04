@@ -12,11 +12,10 @@ use mpi
 IMPLICIT NONE
 
 ! LOCALS
-INTEGER :: i, j, k, mpierr
+INTEGER :: i, j, jp, m, k, mpierr
 REAL :: xmin, xmax, ymin, ymax, zmin, zmax
 REAL :: rodt, ridt, xvel, yvel, zvel, width, widthz, widthy
 REAL :: dleft, pleft, dright, pright, plane
-REAL :: RT, dbackground, pbackground
 
 !--------------------------------------------------------------------------------
 ! Set up geometry and boundary conditions of grid
@@ -36,21 +35,27 @@ REAL :: RT, dbackground, pbackground
 
 ! Define the problem...
 
-ngeomx = 2 ! Spherical radial coord.
-ngeomy = 4 ! Spherical polar angle (theta)
-ngeomz = 5 ! Spherical azimuthal angle (phi)
-nleftx = 2 ! The boundary at small radius gets a constant inflow
-nrightx= 1 ! Zero-gradient boundary condition at large radius
-nlefty = 3 ! Periodic theta boundary condition
-nrighty= 3 ! Periodic theta boundary condition
-nleftz = 3 ! Periodic phi boundary condition
-nrightz= 3 ! Periodic phi boundary condition
-xmin   = 7.0e05 ! Min. radius
-xmax   = 160.0e06 ! Max. radius
-ymin   = 0.0
-ymax   = 1.0 ! Units of pi
-zmin   = 0.0
-zmax   = 2.0 ! Units of pi
+! don : Setup 2D cylindrical coordinates (r,z) with inflow/outflow boundary
+! conditions everywhere.
+ngeomx = 0 ! Cylindrical planar z-axis (from Raph)
+ngeomy = 1 ! Cylindrical radial coord (from Raph)
+ngeomz = 3 ! Cylindrical angle phi
+
+! don : set all boundaries to inflow/outflow (zero gradient)
+nleftx = 1
+nrightx= 1
+nlefty = 1
+nrighty= 1
+nleftz = 1
+nrightz= 1
+
+!don : The sun is centered at (z,r) = (0,0)
+xmin   = -10.0*kmperau ! Min. z
+xmax   = 100.0*kmperau ! Max. z
+ymin   = 0.0*kmperau ! Min. r 
+ymax   = 25.0*kmperau ! Max. r
+zmin   = 0.0 ! Min. phi
+zmax   = 2.0 ! Max. phi: units of pi, doesn't matter since kmax=1
 
 ! If any dimension is angular, multiply coordinates by pi...
 if(ngeomy > 2) then
@@ -64,18 +69,14 @@ endif
 
 !======================================================================
 ! Set up parameters from the problem (Expansion into vacuum)
-
-RT = 1.0e04
-pbackground = 1.0e-10
-dbackground = 1.0e-10
-pright = pbackground
-dright = dbackground
-pleft  = pbackground 
-dleft  = dbackground 
+!don : Insert correct parameters in vh1mods.f90
 gam    = 4. / 3.
 gamm   = gam - 1.0
-dinflo = 1.67e-04
-pinflo = dinflo*RT
+
+Rinject = 0.5*kmperau ! Injection radius
+vsphereinject = 4.5*sqrt(RT)
+pinject = dinject*RT
+
 
 !=======================================================================
 ! set time and cycle counters
@@ -109,31 +110,41 @@ if (mype == 0) then
   endif
   write (8,*) 
   write (8,*) 'Adiabatic index, gamma = ', gam
-  write (8,*) 'Inflow Pressure is ', pinflo
-  write (8,*) 'Inflow Density is ', dinflo
+  write (8,*) 'Initial Background Pressure is ', pinject
+  write (8,*) 'Initial Background Density is ', dinject
+  write (8,*) 'Spherical radial velocity is ', vsphereinject
   write (8,*) 
 endif
 
-! initialize background grid:
+! initialize background grid: I'm actually going to have a dead zone and
+! injection region, but those will be initialized on each timestep before
+! calling the sweep functions.
 
 do k = 1, ks
  do j = 1, js
   do i = 1, imax
-    plane = zxc(i)+zyc(mypey*js+j)+zzc(mypez*ks+k)
-    if(plane >= 0.5) then
-      zro(i,j,k) = dright
-      zpr(i,j,k) = pright
-    else
-      zro(i,j,k) = dleft
-      zpr(i,j,k) = pleft
-    endif
-    zux(i,j,k) = 0.
-    zuy(i,j,k) = 0.
-    zuz(i,j,k) = 0.
-    zfl(i,j,k) = 0.
+    zro(i,j,k) = dinject
+    zpr(i,j,k) = pinject
+    !zro(i,mypey*js+j,k) = dinject
+    !zpr(i,mypey*js+j,k) = pinject
+    !don : set the velocity direction (ux = upolarrad, uy = upolarz)
+    ! vsphereinject is the spherical radial velocity, zxa is the polar radius
+    ! coordinate array, and zya is the polar z coordinate array. Here I find the
+    ! polar radial and z velocities.
+    zux(i,j,k) = vsphereinject*zxc(i)/(sqrt(zxc(i)**2 + zyc(mypey*js+j)**2))
+    zuy(i,j,k) = vsphereinject*zyc(mypey*js+j)/(sqrt(zxc(i)**2 + zyc(mypey*js+j)**2))
+    zuz(i,j,k) = 0.0
+    zfl(i,j,k) = 0.0
+    !zux(i,mypey*js+j,k) = vsphereinject*zxc(i)/(sqrt(zxc(i)**2 + zyc(mypey*js+j)**2))
+    !zuy(i,mypey*js+j,k) = vsphereinject*zyc(mypey*js+j)/(sqrt(zxc(i)**2 + zyc(mypey*js+j)**2))
+    !zuz(i,mypey*js+j,k) = 0.0
+    !zfl(i,mypey*js+j,k) = 0.0
   enddo
  enddo
 enddo
+
+call fillmasks
+
 
 !########################################################################
 ! Compute Courant-limited timestep
@@ -209,4 +220,71 @@ do n = 1, nzones
 enddo
 
 return
+end
+
+!#####################################################################
+
+subroutine fillmasks
+
+! GLOBALS
+use global
+use zone
+use mpi
+
+IMPLICIT NONE
+
+! LOCALS
+INTEGER :: i, jp, j, m, k
+REAL :: hdradsph, radsph, raddiff
+
+! Expects Rinject to be defined in vh1mods.f90 so it's global.
+! Assumes 2-D cylindrical geometry and finds the grid cells at injection.
+! The contents of the grid subroutine ensure VH-1 is using constant grid
+! separation dx...
+
+injectimin = imax
+injectimax = 1
+injectjmin = jmax
+injectjmax = 1
+
+hdradsph = 2.0*sqrt(zdx(1)**2 + zdy(1)**2)
+do k = 1, ks
+ do m = 1, npey
+ do jp = 1, js
+!  j = 6 + jp + js*(m-1)
+  j = mypey*js + jp
+  do i = 1, imax
+    ! Compute spherical radial coord for cell center
+    radsph = sqrt(zxc(i)**2 + zyc(j)**2)
+    raddiff = radsph-Rinject
+    if ((raddiff <= hdradsph) .AND. (raddiff >= -1.0*hdradsph)) then
+        ! This is an injection region cell
+        injectmask(i,j) = 1
+        if (i < injectimin) then
+            injectimin = i
+        endif
+        if (i > injectimax) then
+            injectimax = i
+        endif
+        if (j < injectjmin) then
+            injectjmin = j
+        endif
+        if (j > injectjmax) then
+            injectjmax = j
+        endif
+    else
+        ! This is not an injection region cell
+        injectmask(i,j) = 0
+    endif
+    if (raddiff < -1.0*hdradsph) then
+        ! This is a dead zone cell
+        deadmask(i,j) = 1
+    else
+        ! This is not a dead zone cell
+        deadmask(i,j) = 0
+    endif
+  enddo
+ enddo
+enddo
+enddo
 end

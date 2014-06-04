@@ -35,8 +35,7 @@ if(sweep=='x') then
   else if(ngeom==2) then  ! SPHERICAL R
 
     do n = nmin-4, nmax+5
-!      grav(n) = 0.0
-      grav(n) = -GM/((xf(n)+RSOL+ROFF)**2)
+      grav(n) = 0.0
       if (xf(n)/=0.0) then
         fict(n) = (w(n)*w(n)+v(n)*v(n))/xf(n)
       else

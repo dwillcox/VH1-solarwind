@@ -12,16 +12,23 @@ module global
  real :: time, dt, timem, timep, svel 
  real :: gam, gamm
 
- !don : I set courant=0.1 because I anticipate having mach numbers as high as 6
- real, parameter :: courant = 0.1           ! timestep fraction of courant limit
+ !don : I set courant=0.5 but might change since I anticipate having mach numbers as high as 6
+ real, parameter :: courant = 0.5           ! timestep fraction of courant limit
  real, parameter :: pi = 3.1415926535897931 ! shouldn't computers know this?
  real, parameter :: xwig = 0.00             ! fraction of a zone to wiggle grid for dissipation
  real, parameter :: smallp = 1.0e-15        ! Set small values to prevent divide by zero
  real, parameter :: smallr = 1.0e-15
  real, parameter :: small  = 1.0e-15
- real, parameter :: GM = 1.327e11
- real, parameter :: RSOL = 7.0e5 ! Solar radius
- real, parameter :: ROFF = 0.0 ! Offset from RSOL where we start our grid
+ real, parameter :: GM = 1.327e11 ! Gravity is turned off, this doesn't matter
+ real, parameter :: RT = 1.0e4
+ real, parameter :: kmperau = 150.0e06
+
+ !don : Injection parameters - I'm declaring them here so they're globally
+ !accessible. I need these for setting the injection and dead regions.
+ real :: Rinject  ! Radius of injection (in spherical)
+ real :: vsphereinject ! Spherical radial injection velocity
+ real, parameter :: dinject = 1.67e-08 ! Injection Density
+ real :: pinject  ! Injection Pressure
 
  real :: uinflo, dinflo, vinflo, winflo, pinflo, einflo 
  real :: uotflo, dotflo, votflo, wotflo, potflo, eotflo

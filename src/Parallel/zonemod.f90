@@ -3,8 +3,10 @@ module zone
 ! (formerly zone.h) global (3D) data arrays
 !======================================================================= 
  
- INTEGER, PARAMETER :: imax = 100, jmax = 10, kmax = 10    ! Memory dimensions
- INTEGER, PARAMETER :: pey = 2, pez = 2      ! number of MPI tasks
+!don : I configure this for 2D cylindrical (r,z) coordinates
+!don : i = r, j = z, k = phi. Use imax=256, jmax=1028
+ INTEGER, PARAMETER :: imax = 128, jmax = 512, kmax = 1    ! Memory dimensions
+ INTEGER, PARAMETER :: pey = 8, pez = 1      ! number of MPI tasks
 !              ####### for 2D:  ^^^  IF kmax=1, MUST HAVE pez=1   #############
  INTEGER, PARAMETER :: nvar = 6              ! number of primitive fluid variables
 
@@ -21,6 +23,17 @@ module zone
  REAL, DIMENSION(imax) :: zxa, zdx, zxc
  REAL, DIMENSION(jmax) :: zya, zdy, zyc
  REAL, DIMENSION(kmax) :: zza, zdz, zzc
+
+ !don : Declare arrays containing indices for injection region mask
+ INTEGER, DIMENSION(imax,jmax) :: injectmask
+ !don : store boundaries of the injection region within the mask
+ INTEGER :: injectimin
+ INTEGER :: injectimax
+ INTEGER :: injectjmin
+ INTEGER :: injectjmax
+
+ !don : Declare arrays containing indices for dead zone mask
+ INTEGER, DIMENSION(imax,jmax) :: deadmask
  
  REAL, DIMENSION(nvar,kmax/pez,jmax/pey,imax) :: send1
  REAL, DIMENSION(nvar,kmax/pez,imax/pey,jmax) :: send2

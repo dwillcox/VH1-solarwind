@@ -1,3 +1,52 @@
+!-------------------------------------------------------------------------------
+subroutine hardsetzones
+
+!Globals
+use global
+use zone
+use mpi
+
+IMPLICIT NONE
+!Locals
+
+INTEGER :: i, j, k, jp
+
+do k = 1, ks
+ do j = 1, js
+  jp = mypey*js+j
+  if ((jp >= injectjmin) .AND. (jp <= injectjmax)) then
+  do i = injectimin, injectimax
+    if (injectmask(i,jp) == 1) then
+        ! we are in an injection cell
+        zro(i,j,k) = dinject
+        zpr(i,j,k) = pinject
+        !don : set the velocity direction (ux = upolarrad, uy = upolarz)
+        ! vsphereinject is spherical radial velocity, zxa is the polar    radius
+        ! coordinate array, and zya is the polar z coordinate array.
+        ! Here I find the polar radial and z velocities.
+        zux(i,j,k) = vsphereinject*zxc(i)/(sqrt(zxc(i)**2 + zyc(jp)**2))
+        zuy(i,j,k) = vsphereinject*zyc(jp)/(sqrt(zxc(i)**2 + zyc(jp)**2))
+        zuz(i,j,k) = 0.0
+        zfl(i,j,k) = 0.0
+    elseif (deadmask(i,jp) == 1) then
+        ! we are in a dead cell
+        zro(i,j,k) = dinject
+        zpr(i,j,k) = pinject
+        zux(i,j,k) = 0.0
+        zuy(i,j,k) = 0.0
+        zuz(i,j,k) = 0.0
+        zfl(i,j,k) = 0.0
+    endif
+  enddo
+  endif
+ enddo
+enddo
+
+end
+
+
+!-------------------------------------------------------------------------------
+
 program vhone
 
 !--------------------------------------------------------------------------
@@ -81,6 +130,8 @@ js   = jmax / pey
 ks   = kmax / pez
 isy  = imax / pey
 isz  = imax / pez
+!don : ndim is set to 2 based on kmax, so VH-1 expects the k-dimension to be the
+!neglected dimension in a 2-D domain.
 ndim = 3; if (kmax==1) ndim = 2
 
 ! set size of send/receive buffers for alltoall calls
@@ -172,9 +223,13 @@ if ((rstrt == 'NO').or.(rstrt == 'no')) then ! Initialize variables for new prob
 
   endif
 
+  !don : Setting the background density, pressure, and velocity is done in the
+  !init.f90 file ...
   call init
   nfile_start = nfile
   call prin
+
+  
 
 else ! Restart from old dumpfile...
   
@@ -225,6 +280,10 @@ do while (ncycle < ncycend)
     dt = 0.5*(tmovie - timem)
     ncycm = nmovie
   endif
+
+!don : set dead and injection zone values across the grid
+  call hardsetzones
+
 
 ! Alternate sweeps to approximate 2nd order operator splitting
 
