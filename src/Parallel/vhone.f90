@@ -290,7 +290,7 @@ do while (ncycle < ncycend)
   olddt  = dt
   svel   = 0.
 
-  if (ncycle >= 5000) then
+  if (ncycle >= 8000) then
     call initblast
   endif    
 

@@ -1,5 +1,5 @@
 GFORTRAN module version '10' created from ../PPMLR/vh1mods.f90
-MD5:325e233aa75164f92fc84e90ec504b78 -- If you edit this, you'll get what you deserve.
+MD5:1ca677f6e99d53faa06fdf8e72622fdd -- If you edit this, you'll get what you deserve.
 
 (() () () () () () () () () () () () () () () () () () () () () () () ()
 () () ())
@@ -21,7 +21,7 @@ REAL 4 0 0 0 REAL ()) 0 '0.8000000@0') () 0 () () () 0 0)
 IMPLICIT-SAVE 0 0) (REAL 4 0 0 0 REAL ()) 0 0 () () 0 () () () 0 0)
 4 'dinject' 'global' '' 1 ((PARAMETER UNKNOWN-INTENT UNKNOWN-PROC
 UNKNOWN IMPLICIT-SAVE 0 0) (REAL 4 0 0 0 REAL ()) 0 0 () (CONSTANT (
-REAL 4 0 0 0 REAL ()) 0 '0.47b9d80@-6') () 0 () () () 0 0)
+REAL 4 0 0 0 REAL ()) 0 '0.4f74f70@-6') () 0 () () () 0 0)
 5 'dotflo' 'global' '' 1 ((VARIABLE UNKNOWN-INTENT UNKNOWN-PROC UNKNOWN
 IMPLICIT-SAVE 0 0) (REAL 4 0 0 0 REAL ()) 0 0 () () 0 () () () 0 0)
 6 'dsnblast' 'global' '' 1 ((PARAMETER UNKNOWN-INTENT UNKNOWN-PROC
