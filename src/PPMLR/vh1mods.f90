@@ -27,7 +27,7 @@ module global
  !accessible. I need these for setting the injection and dead regions.
  real :: Rinject  ! Radius of injection (in spherical)
  real :: vsphereinject ! Spherical radial injection velocity
- real, parameter :: dinject = 1.67e-08 ! Injection Density
+ real, parameter :: dinject = 1.85e-08 ! Injection Density
  real :: pinject  ! Injection Pressure
 
  !don : Supernova blast parameters
