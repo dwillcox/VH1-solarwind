@@ -30,6 +30,11 @@ module global
  real, parameter :: dinject = 1.67e-08 ! Injection Density
  real :: pinject  ! Injection Pressure
 
+ !don : Supernova blast parameters
+ real, parameter :: dsnblast = 0.635e-09
+ real, parameter :: psnblast = 0.82e-03
+ real, parameter :: velsnblast = 1.94e03
+
  real :: uinflo, dinflo, vinflo, winflo, pinflo, einflo 
  real :: uotflo, dotflo, votflo, wotflo, potflo, eotflo
       

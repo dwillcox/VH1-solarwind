@@ -1,4 +1,27 @@
 !-------------------------------------------------------------------------------
+subroutine initblast
+
+!Globals
+use global
+use zone
+use mpi
+
+IMPLICIT NONE
+!Locals
+
+INTEGER :: j,k
+
+do k = 1, ks
+do j = 1, js
+  zro(imax-6,j,k) = dsnblast
+  zpr(imax-6,j,k) = psnblast
+  zux(imax-6,j,k) = -1.0*velsnblast
+enddo
+enddo
+
+end
+
+!-------------------------------------------------------------------------------
 subroutine hardsetzones
 
 !Globals
@@ -266,6 +289,10 @@ do while (ncycle < ncycend)
   ncycm  = ncycm  + 2
   olddt  = dt
   svel   = 0.
+
+  if (ncycle == 5000) then
+    call initblast
+  endif    
 
   if ( time + 2*dt > endtime ) then ! set dt to land on endtime
     if(mype==0) write(8,*) 'cutting to the end...', ncycle, ncycend
