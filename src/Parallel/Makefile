@@ -12,10 +12,10 @@ VPATH = ../PPMLR
 #                    netcdf data format http://www.unidata.ucar.edu/software/netcdf
 #
 F90 = mpif90 
-FFLAGS = -c -O3 -Wall -I/usr/include -I/usr/lib64/gfortran/modules
+FFLAGS = -c -O3 -Wall -I/home/dwillcox/local/netcdf/include -I/home/dwillcox/local/include
 LDR=  mpif90
 LDRFLAGS= 
-LIBS=   -L/usr/lib64/mpich/lib -lnetcdff -lnetcdf
+LIBS=   -L/home/dwillcox/local/netcdf/lib -lnetcdff -lnetcdf
 #
 # List of objects to build multidimensional VH-1 hydro code:
 

@@ -1,0 +1,10 @@
+&hinput
+ rstrt   = 'no'
+ prefix  = 'solarwind'
+ ncycend = 100000
+ ndump   = 5000000
+ nprin   = 1
+ nmovie  = 10
+ endtime = 1000.0e+00
+ tprin   = 1000.0e+00
+ tmovie  = 1000.0e+00 /

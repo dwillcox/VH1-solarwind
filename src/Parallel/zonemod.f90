@@ -3,8 +3,8 @@ module zone
 ! (formerly zone.h) global (3D) data arrays
 !======================================================================= 
  
- INTEGER, PARAMETER :: imax = 100, jmax = 10, kmax = 10    ! Memory dimensions
- INTEGER, PARAMETER :: pey = 2, pez = 2      ! number of MPI tasks
+ INTEGER, PARAMETER :: imax = 100, jmax = 12, kmax = 12    ! Memory dimensions
+ INTEGER, PARAMETER :: pey = 4, pez = 4      ! number of MPI tasks
 !              ####### for 2D:  ^^^  IF kmax=1, MUST HAVE pez=1   #############
  INTEGER, PARAMETER :: nvar = 6              ! number of primitive fluid variables
 

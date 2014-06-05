@@ -13,14 +13,14 @@ module global
  real :: gam, gamm
 
  !don : I set courant=0.1 because I anticipate having mach numbers as high as 6
- real, parameter :: courant = 0.1           ! timestep fraction of courant limit
+ real, parameter :: courant = 0.5          ! timestep fraction of courant limit
  real, parameter :: pi = 3.1415926535897931 ! shouldn't computers know this?
  real, parameter :: xwig = 0.00             ! fraction of a zone to wiggle grid for dissipation
  real, parameter :: smallp = 1.0e-15        ! Set small values to prevent divide by zero
  real, parameter :: smallr = 1.0e-15
  real, parameter :: small  = 1.0e-15
- real, parameter :: GM = 1.327e11
- real, parameter :: RSOL = 7.0e5 ! Solar radius
+ real, parameter :: GM = 1.0
+ real, parameter :: RSOL = 7.0 ! Solar radius
  real, parameter :: ROFF = 0.0 ! Offset from RSOL where we start our grid
 
  real :: uinflo, dinflo, vinflo, winflo, pinflo, einflo 
