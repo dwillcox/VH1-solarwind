@@ -25,6 +25,7 @@ REAL :: dleft, pleft, dright, pright, plane
 !   = 1  :  inflow/outflow boundary condition
 !   = 2  :  fixed inflow boundary condition
 !   = 3  :  periodic
+!   = 4  :  zero velocity across the boundary, don't constrain other variables
 ! Geometry flag : ngeom                         |  Cartesian:
 !   = 0  :  planar                              |    gx = 0, gy = 0, gz = 0
 !   = 1  :  cylindrical radial                  |  Cylindrical:
@@ -44,7 +45,7 @@ ngeomz = 3 ! Cylindrical angle phi
 ! don : set all boundaries to inflow/outflow (zero gradient)
 nleftx = 1
 nrightx= 1
-nlefty = 1
+nlefty = 0 ! Reflect at r=0
 nrighty= 1
 nleftz = 1
 nrightz= 1

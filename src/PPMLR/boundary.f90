@@ -18,6 +18,7 @@ INTEGER :: n
 !    = 1 : outflow (zero gradients)
 !    = 2 : fixed inflow (eg, uinflo,pinflo,...)
 !    = 3 : periodic (eg, u(nmin-1) = u(nmax))
+!    = 4 : set velocity along this coordinate to zero, nothing more
 
 if ( nleft == 0 ) then
   do n = 1, 6
