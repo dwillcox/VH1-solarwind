@@ -45,7 +45,7 @@ ngeomz = 3 ! Cylindrical angle phi
 ! don : set all boundaries to inflow/outflow (zero gradient)
 nleftx = 1
 nrightx= 1
-nlefty = 0 ! Reflect at r=0
+nlefty = 1 ! 0 would be reflecting at r=0 - probably the right way with mods
 nrighty= 1
 nleftz = 1
 nrightz= 1
